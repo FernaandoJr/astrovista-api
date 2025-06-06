@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"astrovista-api/database"
+	"astrovista-api/i18n"
+	"astrovista-api/middleware"
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +15,15 @@ import (
 )
 
 // GetAllApods retorna todos os APODs no banco de dados
+// @Summary Obtém todos os APODs
+// @Description Retorna todas as imagens astronômicas do dia cadastradas
+// @Tags APODs
+// @Accept json
+// @Produce json
+// @Success 200 {object} AllApodsResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /apods [get]
 func GetAllApods(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -59,8 +71,51 @@ func GetAllApods(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response.Apods = apods // array de objetos
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Size", fmt.Sprintf("%d", len(apods)))
-	json.NewEncoder(w).Encode(response)
+
+	// Obtém o idioma da requisição
+	lang := middleware.GetLanguageFromContext(r.Context())
+
+	// Se não for inglês, tenta traduzir cada APOD no resultado
+	if lang != "en" {
+		// Cria uma resposta traduzida
+		var translatedResponse AllApodsResponse
+		translatedResponse.Count = response.Count
+		translatedApods := make([]map[string]interface{}, 0, len(response.Apods))
+
+		// Traduz cada APOD
+		for _, apod := range response.Apods {
+			// Converte para map para permitir tradução
+			apodMap := map[string]interface{}{
+				"_id":             apod.ID,
+				"date":            apod.Date,
+				"explanation":     apod.Explanation,
+				"hdurl":           apod.Hdurl,
+				"media_type":      apod.MediaType,
+				"service_version": apod.ServiceVersion,
+				"title":           apod.Title,
+				"url":             apod.Url,
+			}
+
+			// Traduz os campos necessários
+			if err := i18n.TranslateAPOD(apodMap, lang); err != nil {
+				log.Printf("Erro ao traduzir APOD: %v", err)
+			}
+
+			translatedApods = append(translatedApods, apodMap)
+		}
+
+		// Cria uma resposta personalizada
+		customResponse := map[string]interface{}{
+			"count": translatedResponse.Count,
+			"apods": translatedApods,
+		}
+
+		// Envia a versão traduzida
+		json.NewEncoder(w).Encode(customResponse)
+	} else {
+		// Sem tradução, envia original
+		json.NewEncoder(w).Encode(response)
+	}
 }

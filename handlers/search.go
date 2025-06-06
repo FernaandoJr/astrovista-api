@@ -1,10 +1,16 @@
 package handlers
 
 import (
+	"astrovista-api/cache"
 	"astrovista-api/database"
+	"astrovista-api/i18n"
+	"astrovista-api/middleware"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -15,17 +21,96 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Estrutura de resposta para o endpoint de pesquisa
-type SearchResponse struct {
-	TotalResults int    `json:"totalResults"`
-	Page         int    `json:"page"`
-	PerPage      int    `json:"perPage"`
-	TotalPages   int    `json:"totalPages"`
-	Results      []Apod `json:"results"`
-}
+// SearchResponse está definido em models.go
 
 // Função para procurar APODs com vários filtros e paginação
+// @Summary Pesquisa avançada de APODs
+// @Description Busca APODs com filtros, paginação e ordenação
+// @Tags APODs
+// @Accept json
+// @Produce json
+// @Param page query int false "Número da página" example(1) minimum(1)
+// @Param perPage query int false "Itens por página (1-200)" example(20) minimum(1) maximum(200)
+// @Param mediaType query string false "Tipo de mídia (image, video ou any)" example(image) Enums(image, video, any)
+// @Param search query string false "Texto para busca em título e explicação" example(nebulosa)
+// @Param startDate query string false "Data inicial (formato YYYY-MM-DD)" example(2023-01-01)
+// @Param endDate query string false "Data final (formato YYYY-MM-DD)" example(2023-01-31)
+// @Param sort query string false "Ordenação (asc ou desc)" example(desc) Enums(asc, desc)
+// @Success 200 {object} SearchResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /apods/search [get]
 func SearchApods(w http.ResponseWriter, r *http.Request) {
+	// Cria uma chave de cache a partir da query string completa
+	queryHash := md5.Sum([]byte(r.URL.RawQuery))
+	cacheKey := "search:" + hex.EncodeToString(queryHash[:])
+
+	// Tenta recuperar resultados do cache
+	var cachedResponse SearchResponse
+	found, err := cache.Get(r.Context(), cacheKey, &cachedResponse)
+	if err != nil {
+		log.Printf("Erro ao acessar cache para busca: %v", err)
+	}
+	// Se encontrou no cache, retorna imediatamente
+	if found {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache", "HIT")
+
+		// Obtém o idioma da requisição
+		lang := middleware.GetLanguageFromContext(r.Context())
+
+		// Se não for inglês, tenta traduzir cada APOD no resultado
+		if lang != "en" {
+			// Cria uma resposta traduzida
+			translatedResponse := SearchResponse{
+				TotalResults: cachedResponse.TotalResults,
+				Page:         cachedResponse.Page,
+				PerPage:      cachedResponse.PerPage,
+				TotalPages:   cachedResponse.TotalPages,
+			}
+
+			translatedApods := make([]map[string]interface{}, 0, len(cachedResponse.Results))
+
+			// Traduz cada APOD
+			for _, apod := range cachedResponse.Results {
+				// Converte para map para permitir tradução
+				apodMap := map[string]interface{}{
+					"_id":             apod.ID,
+					"date":            apod.Date,
+					"explanation":     apod.Explanation,
+					"hdurl":           apod.Hdurl,
+					"media_type":      apod.MediaType,
+					"service_version": apod.ServiceVersion,
+					"title":           apod.Title,
+					"url":             apod.Url,
+				}
+
+				// Traduz os campos necessários
+				if err := i18n.TranslateAPOD(apodMap, lang); err != nil {
+					log.Printf("Erro ao traduzir APOD: %v", err)
+				}
+
+				translatedApods = append(translatedApods, apodMap)
+			}
+
+			// Cria uma resposta personalizada
+			customResponse := map[string]interface{}{
+				"totalResults": translatedResponse.TotalResults,
+				"page":         translatedResponse.Page,
+				"perPage":      translatedResponse.PerPage,
+				"totalPages":   translatedResponse.TotalPages,
+				"results":      translatedApods,
+			}
+
+			// Envia a versão traduzida
+			json.NewEncoder(w).Encode(customResponse)
+		} else {
+			// Sem tradução, envia original
+			json.NewEncoder(w).Encode(cachedResponse)
+		}
+		return
+	}
+
 	// Obtém os parâmetros da query string
 	query := r.URL.Query()
 	// Paginação (padrões: página 1, 20 itens por página)
@@ -199,7 +284,56 @@ func SearchApods(w http.ResponseWriter, r *http.Request) {
 		TotalPages:   totalPages,
 		Results:      apods,
 	}
+	// Armazena a resposta no cache com expiração de 5 minutos
+	if err := cache.Set(r.Context(), cacheKey, response, 5*time.Minute); err != nil {
+		log.Printf("Erro ao armazenar no cache: %v", err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set("X-Cache", "MISS")
+
+	// Obtém o idioma da requisição
+	lang := middleware.GetLanguageFromContext(r.Context())
+
+	// Se não for inglês, tenta traduzir cada APOD no resultado
+	if lang != "en" {
+		translatedApods := make([]map[string]interface{}, 0, len(response.Results))
+
+		// Traduz cada APOD
+		for _, apod := range response.Results {
+			// Converte para map para permitir tradução
+			apodMap := map[string]interface{}{
+				"_id":             apod.ID,
+				"date":            apod.Date,
+				"explanation":     apod.Explanation,
+				"hdurl":           apod.Hdurl,
+				"media_type":      apod.MediaType,
+				"service_version": apod.ServiceVersion,
+				"title":           apod.Title,
+				"url":             apod.Url,
+			}
+
+			// Traduz os campos necessários
+			if err := i18n.TranslateAPOD(apodMap, lang); err != nil {
+				log.Printf("Erro ao traduzir APOD: %v", err)
+			}
+
+			translatedApods = append(translatedApods, apodMap)
+		}
+
+		// Cria uma resposta personalizada
+		customResponse := map[string]interface{}{
+			"totalResults": response.TotalResults,
+			"page":         response.Page,
+			"perPage":      response.PerPage,
+			"totalPages":   response.TotalPages,
+			"results":      translatedApods,
+		}
+
+		// Envia a versão traduzida
+		json.NewEncoder(w).Encode(customResponse)
+	} else {
+		// Sem tradução, envia original
+		json.NewEncoder(w).Encode(response)
+	}
 }

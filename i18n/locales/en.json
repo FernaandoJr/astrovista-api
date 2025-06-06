@@ -1,0 +1,29 @@
+{
+	"apod_title": {
+		"other": "Astronomy Picture of the Day"
+	},
+	"apod_not_found": {
+		"other": "Document not found! Please check the date format (YYYY-MM-DD)."
+	},
+	"search_no_results": {
+		"other": "No documents found matching the search criteria"
+	},
+	"general_error": {
+		"other": "Server error. Please try again later."
+	},
+	"invalid_date": {
+		"other": "Invalid date. Use YYYY-MM-DD format."
+	},
+	"invalid_media_type": {
+		"other": "Invalid media type. Use 'image', 'video', or 'any'."
+	},
+	"date_range_error": {
+		"other": "Date range error. Start date must be earlier than end date."
+	},
+	"cache_status_hit": {
+		"other": "Cached"
+	},
+	"cache_status_miss": {
+		"other": "Not cached"
+	}
+}

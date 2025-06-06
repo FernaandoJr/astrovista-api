@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"astrovista-api/cache"
 	"astrovista-api/database"
+	"astrovista-api/i18n"
+	"astrovista-api/middleware"
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +16,17 @@ import (
 )
 
 // GetApodsDateRange retorna os APODs dentro de um intervalo de datas
+// @Summary Obtém APODs por intervalo de datas
+// @Description Retorna as imagens astronômicas do dia dentro de um intervalo de datas especificado
+// @Tags APODs
+// @Accept json
+// @Produce json
+// @Param start query string false "Data de início (formato YYYY-MM-DD)" example("2023-01-01")
+// @Param end query string false "Data de fim (formato YYYY-MM-DD)" example("2023-01-31")
+// @Success 200 {object} ApodsDateRangeResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /apods/date-range [get]
 func GetApodsDateRange(w http.ResponseWriter, r *http.Request) {
 	startDate := r.URL.Query().Get("start")
 	endDate := r.URL.Query().Get("end")
@@ -19,6 +34,67 @@ func GetApodsDateRange(w http.ResponseWriter, r *http.Request) {
 	// Se o parâmetro "end" não for passado, usa a data atual
 	if endDate == "" {
 		endDate = time.Now().Format("2006-01-02")
+	}
+
+	// Gera uma chave de cache com base nos parâmetros da consulta
+	cacheKey := fmt.Sprintf("apods:range:%s:%s", startDate, endDate)
+
+	// Tenta recuperar do cache
+	var cachedResponse ApodsDateRangeResponse
+	found, err := cache.Get(context.Background(), cacheKey, &cachedResponse)
+	if err != nil {
+		log.Printf("Erro ao acessar cache para intervalo de datas: %v", err)
+	}
+	// Se encontrou no cache, retorna imediatamente
+	if found {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache", "HIT")
+
+		// Obtém o idioma da requisição
+		lang := middleware.GetLanguageFromContext(r.Context())
+
+		// Se não for inglês, tenta traduzir cada APOD no resultado
+		if lang != "en" {
+			// Cria uma resposta traduzida
+			var translatedResponse ApodsDateRangeResponse
+			translatedResponse.Count = cachedResponse.Count
+			translatedApods := make([]map[string]interface{}, 0, len(cachedResponse.Apods))
+
+			// Traduz cada APOD
+			for _, apod := range cachedResponse.Apods {
+				// Converte para map para permitir tradução
+				apodMap := map[string]interface{}{
+					"_id":             apod.ID,
+					"date":            apod.Date,
+					"explanation":     apod.Explanation,
+					"hdurl":           apod.Hdurl,
+					"media_type":      apod.MediaType,
+					"service_version": apod.ServiceVersion,
+					"title":           apod.Title,
+					"url":             apod.Url,
+				}
+
+				// Traduz os campos necessários
+				if err := i18n.TranslateAPOD(apodMap, lang); err != nil {
+					log.Printf("Erro ao traduzir APOD: %v", err)
+				}
+
+				translatedApods = append(translatedApods, apodMap)
+			}
+
+			// Cria uma resposta personalizada
+			customResponse := map[string]interface{}{
+				"count": translatedResponse.Count,
+				"apods": translatedApods,
+			}
+
+			// Envia a versão traduzida
+			json.NewEncoder(w).Encode(customResponse)
+		} else {
+			// Sem tradução, envia original
+			json.NewEncoder(w).Encode(cachedResponse)
+		}
+		return
 	}
 
 	// Verifica se endDate é uma data válida (YYYY-MM-DD)
@@ -93,5 +169,56 @@ func GetApodsDateRange(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Size", fmt.Sprintf("%d", len(apods)))
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set("X-Cache", "MISS") // Indica que veio do banco, não do cache
+
+	// Armazena no cache para consultas futuras
+	// Intervalos de datas específicos podem ser armazenados por um tempo maior (12 horas)
+	if cacheErr := cache.Set(context.Background(), cacheKey, response, 12*time.Hour); cacheErr != nil {
+		log.Printf("Erro ao armazenar intervalo de datas no cache: %v", cacheErr)
+	}
+
+	// Obtém o idioma da requisição
+	lang := middleware.GetLanguageFromContext(r.Context())
+
+	// Se não for inglês, tenta traduzir cada APOD no resultado
+	if lang != "en" {
+		// Cria uma resposta traduzida
+		var translatedResponse ApodsDateRangeResponse
+		translatedResponse.Count = response.Count
+		translatedApods := make([]map[string]interface{}, 0, len(response.Apods))
+
+		// Traduz cada APOD
+		for _, apod := range response.Apods {
+			// Converte para map para permitir tradução
+			apodMap := map[string]interface{}{
+				"_id":             apod.ID,
+				"date":            apod.Date,
+				"explanation":     apod.Explanation,
+				"hdurl":           apod.Hdurl,
+				"media_type":      apod.MediaType,
+				"service_version": apod.ServiceVersion,
+				"title":           apod.Title,
+				"url":             apod.Url,
+			}
+
+			// Traduz os campos necessários
+			if err := i18n.TranslateAPOD(apodMap, lang); err != nil {
+				log.Printf("Erro ao traduzir APOD: %v", err)
+			}
+
+			translatedApods = append(translatedApods, apodMap)
+		}
+
+		// Cria uma resposta personalizada
+		customResponse := map[string]interface{}{
+			"count": translatedResponse.Count,
+			"apods": translatedApods,
+		}
+
+		// Envia a versão traduzida
+		json.NewEncoder(w).Encode(customResponse)
+	} else {
+		// Sem tradução, envia original
+		json.NewEncoder(w).Encode(response)
+	}
 }

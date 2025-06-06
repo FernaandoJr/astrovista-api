@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"astrovista-api/cache"
 	"astrovista-api/database"
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -14,6 +16,17 @@ import (
 )
 
 // PostApod busca o APOD mais recente da API da NASA e o adiciona ao banco de dados
+// @Summary Adiciona novo APOD da NASA
+// @Description Busca na API da NASA o APOD mais recente e adiciona ao banco de dados
+// @Tags APOD
+// @Accept json
+// @Produce json
+// @Param X-API-Token header string true "Token de API interno"
+// @Success 201 {object} map[string]interface{}
+// @Failure 401 {object} map[string]string
+// @Failure 409 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /apod [post]
 func PostApod(w http.ResponseWriter, r *http.Request) {
 	// Verifica token básico de API (para serviço interno/agendado)
 	apiToken := r.Header.Get("X-API-Token")
@@ -109,6 +122,17 @@ func PostApod(w http.ResponseWriter, r *http.Request) {
 			"details": err.Error(),
 		})
 		return
+	}
+	// Invalidar cache relacionado
+	// 1. Remove o APOD mais recente do cache
+	if err := cache.Delete(ctx, "apod:latest"); err != nil {
+		log.Printf("Erro ao invalidar cache do APOD mais recente: %v", err)
+	}
+
+	// 2. Remove qualquer cache específico para essa data
+	cacheKey := "apod:date:" + apod.Date
+	if err := cache.Delete(ctx, cacheKey); err != nil {
+		log.Printf("Erro ao invalidar cache para data %s: %v", apod.Date, err)
 	}
 
 	// Retorna sucesso com o ID inserido

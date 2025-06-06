@@ -1,0 +1,29 @@
+{
+	"apod_title": {
+		"other": "Imagem Astronômica do Dia"
+	},
+	"apod_not_found": {
+		"other": "Documento não encontrado! Por favor verifique o formato da data (AAAA-MM-DD)."
+	},
+	"search_no_results": {
+		"other": "Nenhum documento encontrado para os critérios de busca"
+	},
+	"general_error": {
+		"other": "Erro do servidor. Por favor, tente novamente mais tarde."
+	},
+	"invalid_date": {
+		"other": "Data inválida. Use o formato AAAA-MM-DD."
+	},
+	"invalid_media_type": {
+		"other": "Tipo de mídia inválido. Use 'image', 'video' ou 'any'."
+	},
+	"date_range_error": {
+		"other": "Erro no intervalo de datas. A data de início deve ser anterior à data final."
+	},
+	"cache_status_hit": {
+		"other": "Em cache"
+	},
+	"cache_status_miss": {
+		"other": "Não em cache"
+	}
+}

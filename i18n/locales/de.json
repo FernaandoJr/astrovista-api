@@ -1,0 +1,29 @@
+{
+	"apod_title": {
+		"other": "Astronomisches Bild des Tages"
+	},
+	"apod_not_found": {
+		"other": "Dokument nicht gefunden! Bitte überprüfen Sie das Datumsformat (JJJJ-MM-TT)."
+	},
+	"search_no_results": {
+		"other": "Keine Dokumente gefunden, die den Suchkriterien entsprechen"
+	},
+	"general_error": {
+		"other": "Serverfehler. Bitte versuchen Sie es später erneut."
+	},
+	"invalid_date": {
+		"other": "Ungültiges Datum. Verwenden Sie das Format JJJJ-MM-TT."
+	},
+	"invalid_media_type": {
+		"other": "Ungültiger Medientyp. Verwenden Sie 'image', 'video' oder 'any'."
+	},
+	"date_range_error": {
+		"other": "Datumsbereichsfehler. Das Startdatum muss vor dem Enddatum liegen."
+	},
+	"cache_status_hit": {
+		"other": "Zwischengespeichert"
+	},
+	"cache_status_miss": {
+		"other": "Nicht zwischengespeichert"
+	}
+}
