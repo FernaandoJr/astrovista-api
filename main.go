@@ -20,6 +20,7 @@ func main() {
 	router.HandleFunc("/apod/{date}", handlers.GetApodDate).Methods("GET")
 	router.HandleFunc("/apods", handlers.GetAllApods).Methods("GET")
 	router.HandleFunc("/apods/search", handlers.SearchApods).Methods("GET")
+	router.HandleFunc("/apods/date-range", handlers.GetApodsDateRange).Methods("GET")
 
 	// Rate limiter: 1 requisição por minuto
 	rateLimiter := middleware.NewRateLimiter(1, 1*time.Minute)
