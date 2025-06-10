@@ -1,10 +1,10 @@
-# ⚠️ REPOSITÓRIO ARQUIVADO ⚠️
+# ⚠️ REPOSITORY ARCHIVED ⚠️
 
-> **AVISO IMPORTANTE:** Este repositório foi arquivado e movido para a organização oficial do AstroVista no GitHub.
+> **IMPORTANT NOTICE:** This repository has been archived and moved to the official AstroVista organization on GitHub.
 >
-> **Novo Repositório:** [https://github.com/AstroVista/astrovista-api](https://github.com/AstroVista/astrovista-api)
+> **New Organization:** [https://github.com/AstroVista](https://github.com/AstroVista/astrovista-api)
 >
-> Por favor, dirija-se ao novo repositório para obter a versão mais recente, enviar issues ou contribuir com o projeto.
+> Please go to the new repository for the latest version, to submit issues, or to contribute to the project.
 
 ---
 
@@ -142,8 +142,8 @@ MIT
 
 ---
 
-## Sobre o repositório arquivado
+## About the archived repository
 
-Este repositório foi arquivado em 10 de junho de 2025 e movido para a organização oficial do AstroVista no GitHub para centralizar o desenvolvimento e melhorar a colaboração entre os contribuidores. Todas as issues, pull requests e discussões devem ser direcionadas ao [novo repositório](https://github.com/AstroVista/astrovista-api).
+This repository was archived on June 10, 2025, and moved to the official AstroVista organization on GitHub to centralize development and improve collaboration among contributors. All issues, pull requests, and discussions should be directed to the [new repository](https://github.com/AstroVista/astrovista-api).
 
-**Não serão aceitas novas contribuições neste repositório.**
+**No new contributions will be accepted in this repository.**
