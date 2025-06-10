@@ -1,3 +1,13 @@
+# ⚠️ REPOSITÓRIO ARQUIVADO ⚠️
+
+> **AVISO IMPORTANTE:** Este repositório foi arquivado e movido para a organização oficial do AstroVista no GitHub.
+>
+> **Novo Repositório:** [https://github.com/AstroVista/astrovista-api](https://github.com/AstroVista/astrovista-api)
+>
+> Por favor, dirija-se ao novo repositório para obter a versão mais recente, enviar issues ou contribuir com o projeto.
+
+---
+
 # AstroVista API
 
 API para gerenciar dados da NASA APOD (Astronomy Picture of the Day) com recursos avançados de documentação interativa, sistema de cache e suporte a múltiplos idiomas.
@@ -129,3 +139,11 @@ As respostas da API incluem o cabeçalho `X-Cache` para indicar se o resultado v
 ## Licença
 
 MIT
+
+---
+
+## Sobre o repositório arquivado
+
+Este repositório foi arquivado em 10 de junho de 2025 e movido para a organização oficial do AstroVista no GitHub para centralizar o desenvolvimento e melhorar a colaboração entre os contribuidores. Todas as issues, pull requests e discussões devem ser direcionadas ao [novo repositório](https://github.com/AstroVista/astrovista-api).
+
+**Não serão aceitas novas contribuições neste repositório.**
