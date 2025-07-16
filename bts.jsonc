@@ -4,14 +4,12 @@
 {
   "$schema": "https://better-t-stack.dev/schema.json",
   "version": "2.26.0",
-  "createdAt": "2025-07-16T17:17:52.278Z",
+  "createdAt": "2025-07-16T18:26:31.208Z",
   "database": "postgres",
   "orm": "drizzle",
   "backend": "hono",
   "runtime": "workers",
-  "frontend": [
-    "next"
-  ],
+  "frontend": [],
   "addons": [
     "biome",
     "husky",
@@ -23,5 +21,5 @@
   "packageManager": "npm",
   "dbSetup": "supabase",
   "api": "trpc",
-  "webDeploy": "workers"
+  "webDeploy": "none"
 }
