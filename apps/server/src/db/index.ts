@@ -1,5 +1,6 @@
+import { createClient } from "@supabase/supabase-js"
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import { env } from "cloudflare:workers";
+const supabaseUrl = "https://norjgyhilqiojxvismzy.supabase.co"
+const supabaseKey = process.env.ANON_KEY || ""
 
-export const db = drizzle(env.DATABASE_URL || "");
+export const supabase = createClient(supabaseUrl, supabaseKey)
