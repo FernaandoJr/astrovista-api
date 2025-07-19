@@ -7,12 +7,12 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: "My Docs",
+			title: "AstroVista API",
 			social: [
 				{
 					icon: "github",
 					label: "GitHub",
-					href: "https://github.com/withastro/starlight",
+					href: "https://github.com/FernaandoJr/astrovista-api",
 				},
 			],
 			sidebar: [
