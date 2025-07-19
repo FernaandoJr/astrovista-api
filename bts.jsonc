@@ -3,12 +3,12 @@
 
 {
   "$schema": "https://better-t-stack.dev/schema.json",
-  "version": "2.26.0",
-  "createdAt": "2025-07-16T18:26:31.208Z",
-  "database": "postgres",
-  "orm": "drizzle",
+  "version": "2.26.1",
+  "createdAt": "2025-07-19T00:52:32.890Z",
+  "database": "mongodb",
+  "orm": "prisma",
   "backend": "hono",
-  "runtime": "workers",
+  "runtime": "bun",
   "frontend": [],
   "addons": [
     "biome",
@@ -19,7 +19,7 @@
   "examples": [],
   "auth": false,
   "packageManager": "npm",
-  "dbSetup": "supabase",
+  "dbSetup": "mongodb-atlas",
   "api": "trpc",
   "webDeploy": "none"
 }

@@ -1,40 +1,34 @@
 {
-  "name": "server",
-  "main": "src/index.ts",
-  "type": "module",
-  "scripts": {
-    "build": "wrangler deploy --dry-run",
-    "check-types": "tsc --noEmit",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "wrangler dev --port=3000",
-    "start": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
-  },
-  "dependencies": {
-    "@hono/trpc-server": "^0.4.0",
-    "@supabase/supabase-js": "^2.51.0",
-    "@trpc/client": "^11.4.2",
-    "@trpc/server": "^11.4.2",
-    "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.44.2",
-    "hono": "^4.8.2",
-    "pg": "^8.14.1",
-    "postgres": "^3.4.7",
-    "zod": "^4.0.2"
-  },
-  "trustedDependencies": [
-    "supabase"
-  ],
-  "devDependencies": {
-    "@types/pg": "^8.11.11",
-    "drizzle-kit": "^0.31.2",
-    "tsdown": "^0.12.9",
-    "typescript": "^5.8.2",
-    "wrangler": "^4.23.0"
-  }
+	"name": "server",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"build": "tsdown",
+		"check-types": "tsc --noEmit",
+		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+		"dev": "bun run --hot src/index.ts",
+		"start": "bun run dist/index.js",
+		"db:push": "prisma db push --schema ./prisma/schema",
+		"db:studio": "prisma studio",
+		"db:generate": "prisma generate --schema ./prisma/schema",
+		"db:migrate": "prisma migrate dev"
+	},
+	"prisma": {
+		"schema": "./schema"
+	},
+	"dependencies": {
+		"dotenv": "^16.4.7",
+		"zod": "^4.0.2",
+		"@trpc/server": "^11.4.2",
+		"@trpc/client": "^11.4.2",
+		"@hono/trpc-server": "^0.4.0",
+		"hono": "^4.8.2",
+		"@prisma/client": "^6.9.0"
+	},
+	"devDependencies": {
+		"tsdown": "^0.12.9",
+		"typescript": "^5.8.2",
+		"@types/bun": "^1.2.6",
+		"prisma": "^6.9.0"
+	}
 }

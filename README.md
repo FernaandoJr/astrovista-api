@@ -7,9 +7,9 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **TypeScript** - For type safety and improved developer experience
 - **Hono** - Lightweight, performant server framework
 - **tRPC** - End-to-end type-safe APIs
-- **workers** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
+- **Bun** - Runtime environment
+- **Prisma** - TypeScript-first ORM
+- **MongoDB** - Database engine
 - **Biome** - Linting and formatting
 - **Husky** - Git hooks for code quality
 - **Starlight** - Documentation site with Astro
@@ -24,12 +24,12 @@ npm install
 ```
 ## Database Setup
 
-This project uses PostgreSQL with Drizzle ORM.
+This project uses MongoDB with Prisma ORM.
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+1. Make sure you have MongoDB set up.
+2. Update your `apps/server/.env` file with your MongoDB connection URI.
 
-3. Apply the schema to your database:
+3. Generate the Prisma client and push the schema:
 ```bash
 npm run db:push
 ```
