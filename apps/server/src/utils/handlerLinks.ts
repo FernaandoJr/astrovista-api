@@ -26,48 +26,54 @@ export function handlerLinks({
 	const baseUrl = "/apods/search?";
 
 	const nextLink = hasNextPage
-		? `${baseUrl}${new URLSearchParams({
-				q: query || "",
-				startDate: startDate || "",
-				endDate: endDate || "",
-				mediaType: mediaType || "",
-				perPage: perPage ? String(perPage) : "",
-				page: page ? String(page + 1) : "",
-				sort: sort || "",
-			})}`
+		? (() => {
+				const params: Record<string, string> = {};
+				if (query) params.q = query;
+				if (startDate) params.startDate = startDate;
+				if (endDate) params.endDate = endDate;
+				if (mediaType) params.mediaType = mediaType;
+				if (perPage) params.perPage = String(perPage);
+				if (page) params.page = String(page + 1);
+				if (sort) params.sort = sort;
+				return `${baseUrl}${new URLSearchParams(params)}`;
+			})()
 		: null;
 
 	const previousLink = hasPreviousPage
-		? `${baseUrl}${new URLSearchParams({
-				query: query || "",
-				startDate: startDate || "",
-				endDate: endDate || "",
-				mediaType: mediaType || "",
-				perPage: perPage ? String(perPage) : "",
-				page: String((page ?? 1) - 1),
-				sort: sort || "",
-			})}`
+		? (() => {
+				const params: Record<string, string> = {};
+				if (query) params.q = query;
+				if (startDate) params.startDate = startDate;
+				if (endDate) params.endDate = endDate;
+				if (mediaType) params.mediaType = mediaType;
+				if (perPage) params.perPage = String(perPage);
+				if (page) params.page = String((page ?? 1) - 1);
+				if (sort) params.sort = sort;
+				return `${baseUrl}${new URLSearchParams(params)}`;
+			})()
 		: null;
 
-	const firstLink = `${baseUrl}${new URLSearchParams({
-		q: query || "",
-		startDate: startDate || "",
-		endDate: endDate || "",
-		mediaType: mediaType || "",
-		perPage: perPage ? String(perPage) : "",
-		page: "1",
-		sort: sort || "",
-	})}`;
+	const params: Record<string, string> = {};
+	if (query) params.q = query;
+	if (startDate) params.startDate = startDate;
+	if (endDate) params.endDate = endDate;
+	if (mediaType) params.mediaType = mediaType;
+	if (perPage) params.perPage = String(perPage);
+	params.page = "1";
+	if (sort) params.sort = sort;
 
-	const lastLink = `${baseUrl}${new URLSearchParams({
-		q: query || "",
-		startDate: startDate || "",
-		endDate: endDate || "",
-		mediaType: mediaType || "",
-		perPage: perPage ? String(perPage) : "",
-		page: String(totalPages),
-		sort: sort || "",
-	})}`;
+	const firstLink = `${baseUrl}${new URLSearchParams(params)}`;
+
+	const lastParams: Record<string, string> = {};
+	if (query) lastParams.q = query;
+	if (startDate) lastParams.startDate = startDate;
+	if (endDate) lastParams.endDate = endDate;
+	if (mediaType) lastParams.mediaType = mediaType;
+	if (perPage) lastParams.perPage = String(perPage);
+	lastParams.page = String(totalPages);
+	if (sort) lastParams.sort = sort;
+
+	const lastLink = `${baseUrl}${new URLSearchParams(lastParams)}`;
 
 	const links = {
 		next: nextLink,

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { PrismaClient } from "prisma/generated/client";
 import { errorResponse } from "@/utils/errorResponse";
 import { handlerLinks } from "@/utils/handlerLinks";
+import { isValidDateFormat } from "@/utils/isValidDate";
 import { searchResponse } from "@/utils/searchResponse";
 
 const prisma = new PrismaClient();
@@ -12,31 +13,46 @@ apods.get("/", async (c) => {
 	return c.json(apods);
 });
 
-// ENDPOINT DE PESQUISA AVANÇADA
 apods.get("/search", async (c) => {
 	const query = c.req.query("q");
-	const startDate = c.req.query("startDate");
-	const endDate = c.req.query("endDate");
+	const today = new Date();
+	const formattedToday = today.toISOString().split("T")[0]; // YYYY-MM-DD
+	let startDate = c.req.query("startDate") || formattedToday;
+	let endDate = c.req.query("endDate") || formattedToday;
 	const mediaType = c.req.query("mediaType");
 	const perPage = c.req.query("perPage") ? Number(c.req.query("perPage")) : 10;
 	const page = c.req.query("page") ? Number(c.req.query("page")) : 1;
 	const sort = c.req.query("sort");
 
-	if (
-		(startDate &&
-			endDate &&
-			new Date(startDate as string) > new Date(endDate as string)) ||
-		(startDate && isNaN(new Date(startDate as string).getTime())) ||
-		(endDate && isNaN(new Date(endDate as string).getTime()))
-	) {
+	// Start date is after end date
+	if (new Date(startDate) > new Date(endDate)) {
 		return c.json(
 			errorResponse(
 				"Invalid date range",
-				"Start date cannot be after end date or invalid date format",
+				"startDate cannot be after endDate",
 				400,
 			),
 			400,
 		);
+	}
+
+	if (
+		isValidDateFormat(startDate) === false ||
+		isValidDateFormat(endDate) === false
+	) {
+		return c.json(
+			errorResponse(
+				"Invalid date format",
+				"Date must be in YYYY-MM-DD format",
+				400,
+			),
+			400,
+		);
+	}
+
+	if (startDate === endDate) {
+		startDate = "";
+		endDate = "";
 	}
 
 	if (mediaType && !["image", "video"].includes(mediaType)) {
@@ -83,8 +99,8 @@ apods.get("/search", async (c) => {
 				mode: "insensitive",
 			},
 			date: {
-				gte: startDate ? new Date(startDate).toISOString() : undefined,
-				lte: endDate ? new Date(endDate).toISOString() : undefined,
+				gte: startDate ? startDate : undefined,
+				lte: endDate ? endDate : undefined,
 			},
 			media_type: {
 				equals: mediaType || undefined,
@@ -105,8 +121,8 @@ apods.get("/search", async (c) => {
 				mode: "insensitive",
 			},
 			date: {
-				gte: startDate ? new Date(startDate).toISOString() : undefined,
-				lte: endDate ? new Date(endDate).toISOString() : undefined,
+				gte: startDate ? startDate : undefined,
+				lte: endDate ? endDate : undefined,
 			},
 			media_type: {
 				equals: mediaType || undefined,
