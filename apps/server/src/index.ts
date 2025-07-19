@@ -1,10 +1,9 @@
 import "dotenv/config";
-import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import apod from "./routes/apod";
+import apods from "./routes/apods";
 
 const app = new Hono();
 
@@ -17,18 +16,7 @@ app.use(
 	}),
 );
 
-app.use(
-	"/trpc/*",
-	trpcServer({
-		router: appRouter,
-		createContext: (_opts, context) => {
-			return createContext({ context });
-		},
-	}),
-);
-
-app.get("/", (c) => {
-	return c.text("OK");
-});
+app.route("/apod", apod);
+app.route("/apods", apods);
 
 export default app;
