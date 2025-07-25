@@ -1,5 +1,7 @@
+import axios from "axios";
 import { Hono } from "hono";
-import { PrismaClient } from "prisma/generated/client";
+import { rateLimiter } from "hono-rate-limiter";
+import { type Pictures, PrismaClient } from "prisma/generated/client";
 import { errorResponse } from "@/utils/errorResponse";
 
 const prisma = new PrismaClient();
@@ -17,6 +19,62 @@ apod.get("/", async (c) => {
 	}
 
 	return c.json(latestApod);
+});
+
+apod.post(
+	"/",
+	rateLimiter({
+		windowMs: 60 * 1000,
+		limit: 1,
+		standardHeaders: "draft-6",
+		keyGenerator: (c) => "<unique_key>",
+	}),
+	async (c) => {
+		const response = await axios.get(
+			"https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY",
+		);
+		const newApod = response.data as Pictures;
+
+		const exists = await prisma.pictures.findFirst({
+			where: {
+				date: newApod.date,
+			},
+		});
+
+		if (exists) {
+			return c.json(
+				errorResponse(
+					"APOD already exists",
+					"APOD for this date already exists",
+					409,
+				),
+				409,
+			);
+		}
+
+		await prisma.pictures.create({
+			data: newApod,
+		});
+
+		return c.json(newApod, 201);
+	},
+);
+
+apod.get("/random", async (c) => {
+	const randomApod = await prisma.pictures.findFirst({
+		orderBy: {
+			date: "asc",
+		},
+		take: 1,
+		skip: Math.floor(Math.random() * (await prisma.pictures.count())),
+	});
+	if (!randomApod) {
+		return c.json(
+			errorResponse("No APOD found", "No random APOD available", 404),
+			404,
+		);
+	}
+	return c.json(randomApod);
 });
 
 apod.get("/:date", async (c) => {

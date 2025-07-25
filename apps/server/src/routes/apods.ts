@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { rateLimiter } from "hono-rate-limiter";
 import { PrismaClient } from "prisma/generated/client";
 import { errorResponse } from "@/utils/errorResponse";
 import { handlerLinks } from "@/utils/handlerLinks";
@@ -8,10 +9,38 @@ import { searchResponse } from "@/utils/searchResponse";
 const prisma = new PrismaClient();
 const apods = new Hono();
 
-apods.get("/", async (c) => {
-	const apods = await prisma.pictures.findMany();
-	return c.json(apods);
-});
+apods.get(
+	"/",
+	rateLimiter({
+		windowMs: 60 * 1000,
+		limit: 1,
+		standardHeaders: "draft-6",
+		keyGenerator: () => "<unique_key>",
+	}),
+	async (c) => {
+		const id = c.req.query("id");
+		if (id === "false") {
+			const apods = await prisma.pictures.findMany({
+				select: {
+					id: false,
+					date: true,
+					title: true,
+					media_type: true,
+					url: true,
+					explanation: true,
+					copyright: true,
+					hdurl: true,
+					service_version: true,
+				},
+			});
+			return c.json(apods);
+		}
+
+		const apods = await prisma.pictures.findMany();
+
+		return c.json(apods);
+	},
+);
 
 apods.get("/search", async (c) => {
 	const query = c.req.query("q");
