@@ -30,8 +30,17 @@ apod.post(
 		keyGenerator: (c) => "<unique_key>",
 	}),
 	async (c) => {
+		const key = c.req.header("x-api-key");
+
+		if (!key || key !== process.env.NASA_API_KEY) {
+			return c.json(
+				errorResponse("Unauthorized", "Invalid or missing API key", 401),
+				401,
+			);
+		}
+
 		const response = await axios.get(
-			"https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY",
+			`https://api.nasa.gov/planetary/apod?api_key=${key}`,
 		);
 		const newApod = response.data as Pictures;
 
