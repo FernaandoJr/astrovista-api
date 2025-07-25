@@ -1,13 +1,13 @@
-import { Hono } from "hono";
-import { rateLimiter } from "hono-rate-limiter";
-import { PrismaClient } from "prisma/generated/client";
-import { errorResponse } from "@/utils/errorResponse";
-import { handlerLinks } from "@/utils/handlerLinks";
-import { isValidDateFormat } from "@/utils/isValidDate";
-import { searchResponse } from "@/utils/searchResponse";
+import { Hono } from "hono"
+import { rateLimiter } from "hono-rate-limiter"
+import { PrismaClient } from "prisma/generated/client"
+import { errorResponse } from "@/utils/errorResponse"
+import { handlerLinks } from "@/utils/handlerLinks"
+import { isValidDateFormat } from "@/utils/isValidDate"
+import { searchResponse } from "@/utils/searchResponse"
 
-const prisma = new PrismaClient();
-const apods = new Hono();
+const prisma = new PrismaClient()
+const apods = new Hono()
 
 apods.get(
 	"/",
@@ -18,7 +18,7 @@ apods.get(
 		keyGenerator: () => "<unique_key>",
 	}),
 	async (c) => {
-		const id = c.req.query("id");
+		const id = c.req.query("id")
 		if (id === "false") {
 			const apods = await prisma.pictures.findMany({
 				select: {
@@ -32,26 +32,26 @@ apods.get(
 					hdurl: true,
 					service_version: true,
 				},
-			});
-			return c.json(apods);
+			})
+			return c.json(apods)
 		}
 
-		const apods = await prisma.pictures.findMany();
+		const apods = await prisma.pictures.findMany()
 
-		return c.json(apods);
-	},
-);
+		return c.json(apods)
+	}
+)
 
 apods.get("/search", async (c) => {
-	const query = c.req.query("q");
-	const today = new Date();
-	const formattedToday = today.toISOString().split("T")[0]; // YYYY-MM-DD
-	let startDate = c.req.query("startDate") || formattedToday;
-	let endDate = c.req.query("endDate") || formattedToday;
-	const mediaType = c.req.query("mediaType");
-	const perPage = c.req.query("perPage") ? Number(c.req.query("perPage")) : 10;
-	const page = c.req.query("page") ? Number(c.req.query("page")) : 1;
-	const sort = c.req.query("sort");
+	const query = c.req.query("q")
+	const today = new Date()
+	const formattedToday = today.toISOString().split("T")[0] // YYYY-MM-DD
+	let startDate = c.req.query("startDate") || formattedToday
+	let endDate = c.req.query("endDate") || formattedToday
+	const mediaType = c.req.query("mediaType")
+	const perPage = c.req.query("perPage") ? Number(c.req.query("perPage")) : 10
+	const page = c.req.query("page") ? Number(c.req.query("page")) : 1
+	const sort = c.req.query("sort")
 
 	// Start date is after end date
 	if (new Date(startDate) > new Date(endDate)) {
@@ -59,10 +59,10 @@ apods.get("/search", async (c) => {
 			errorResponse(
 				"Invalid date range",
 				"startDate cannot be after endDate",
-				400,
+				400
 			),
-			400,
-		);
+			400
+		)
 	}
 
 	if (
@@ -73,15 +73,15 @@ apods.get("/search", async (c) => {
 			errorResponse(
 				"Invalid date format",
 				"Date must be in YYYY-MM-DD format",
-				400,
+				400
 			),
-			400,
-		);
+			400
+		)
 	}
 
 	if (startDate === endDate) {
-		startDate = "";
-		endDate = "";
+		startDate = ""
+		endDate = ""
 	}
 
 	if (mediaType && !["image", "video"].includes(mediaType)) {
@@ -89,10 +89,10 @@ apods.get("/search", async (c) => {
 			errorResponse(
 				"Invalid media type",
 				"Media type must be 'image' or 'video'",
-				400,
+				400
 			),
-			400,
-		);
+			400
+		)
 	}
 
 	if (perPage >= 200 || perPage < 1 || isNaN(perPage)) {
@@ -100,26 +100,34 @@ apods.get("/search", async (c) => {
 			errorResponse(
 				"Invalid perPage value",
 				"perPage must be a number less than 200 and greater than 0",
-				400,
+				400
 			),
-			400,
-		);
+			400
+		)
 	}
 	if (page < 1) {
 		return c.json(
-			errorResponse("Invalid page number", "Page must be greater than 0", 400),
-			400,
-		);
+			errorResponse(
+				"Invalid page number",
+				"Page must be greater than 0",
+				400
+			),
+			400
+		)
 	}
 
 	if (sort && !["asc", "desc"].includes(sort)) {
 		return c.json(
-			errorResponse("Invalid sort value", "sort must be 'asc' or 'desc'", 400),
-			400,
-		);
+			errorResponse(
+				"Invalid sort value",
+				"sort must be 'asc' or 'desc'",
+				400
+			),
+			400
+		)
 	}
 
-	const skip = page && perPage ? (page - 1) * perPage : undefined;
+	const skip = page && perPage ? (page - 1) * perPage : undefined
 
 	const apods = await prisma.pictures.findMany({
 		where: {
@@ -140,7 +148,7 @@ apods.get("/search", async (c) => {
 		},
 		take: perPage,
 		skip: skip,
-	});
+	})
 
 	// count total records for pagination
 	const totalRecords = await prisma.pictures.count({
@@ -160,16 +168,20 @@ apods.get("/search", async (c) => {
 		orderBy: {
 			date: sort === "asc" ? "asc" : "desc",
 		},
-	});
+	})
 
-	const hasNextPage = !!(page && perPage && apods.length === perPage);
-	const hasPreviousPage = page > 1;
+	const hasNextPage = !!(page && perPage && apods.length === perPage)
+	const hasPreviousPage = page > 1
 
 	if (apods.length === 0) {
 		return c.json(
-			errorResponse("No APODs found", "No results for the given query", 404),
-			404,
-		);
+			errorResponse(
+				"No APODs found",
+				"No results for the given query",
+				404
+			),
+			404
+		)
 	}
 	return c.json(
 		searchResponse({
@@ -193,8 +205,8 @@ apods.get("/search", async (c) => {
 				page,
 				sort,
 			}),
-		}),
-	);
-});
+		})
+	)
+})
 
-export default apods;
+export default apods
