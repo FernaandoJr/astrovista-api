@@ -18,6 +18,15 @@ apods.get(
 		keyGenerator: () => "<unique_key>",
 	}),
 	async (c) => {
+		const key = c.req.header("x-api-key");
+
+		if (key !== process.env.API_KEY) {
+			return c.json(
+				errorResponse("Unauthorized", "Invalid or missing API key", 401),
+				401,
+			);
+		}
+
 		const id = c.req.query("id");
 		if (id === "false") {
 			const apods = await prisma.pictures.findMany({
